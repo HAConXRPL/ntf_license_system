@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <memta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initail-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Simple Modal</title>
+    </head>
+    <style>
+        body {
+            font-family:Arial, Helvetica, sans-serif;
+            font-size:17px;
+            line-height:1.6;
+        }
+
+        .modal{
+            display:block;
+            position:fixed;
+            z-index:1;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content{
+            background-color: #f4f4f4;
+            padding:10px;
+            width:400px;
+            margin-left: 50%;
+            margin-top: 10%;
+            transform: translate(-50%,0%);
+            box-shadow: 0 5px 8px 0 rgba(0,0,0,0.2),0 7px 20px 0 rgba(0,0,0,0.17);
+            animation-name:modalopen;
+            animation-duration: 1s;
+        }
+
+        .modal-header {
+            background: coral;
+            padding:5px;
+            color:#fff;
+        }
+
+        .modal-body {
+            text-align: center;
+        }
+
+        .modal-footer {
+            background: coral;
+            padding:5px;
+            color:#fff;
+            text-align: center;
+        }
+
+        .closeBtn {
+            color:#ccc;
+            float:right;
+            font-size:30px;    
+        }
+
+        .closeBtn:hover,.closeBtn:focus{
+            color:#000;
+            text-decoration: none;
+            cursor:pointer;
+        }
+
+        @keyframes modalopen{
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+    </style>
+    <body>        
+        <div id="simpleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="closeBtn">&times;</span>
+                    <h1>Modal Header</h1>
+                </div>             
+                <div class="modal-body">
+                    <img src=<%=qr_png%> alt="QR-이미지">
+                </div>
+                <div class="modal-footer">
+                    <h3>Modal Footer</h3>
+                </div>
+            </div>
+        </div>
+        <script src="auth/auth.js"></script>
+    </body>
+</html>

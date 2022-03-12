@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://unpkg.com/xrpl@2.1.0-beta.1"></script>
+        <script>
+            if (typeof module !== "undefined") var xrpl = require("xrpl");
+            //
+            async function resMsg(id) {
+                //
+                switch ( id ) 
+                {
+                case     1 : return "지갑 연결 성공.";
+                case 10001 : return "다른 부모 노드와 연결되어 있습니다.";
+                case 10002 : return "자식 노드를 부모 노드로 등록할 수 없습니다.";
+                case 10003 : return "이미 등록된 자식 노드입니다.";
+                case 10004 : return "부모 노드 생성 실패";
+                case 10005 : return "자식 노드 생성 실패";
+                default    : return "알 수 없는 오류 메세지"
+                }
+                //
+                return false;
+            }
+
+            async function existNode(nfts, account, isParent) {
+                var uri = (isParent ? "PARENT:" : "CHILD:") + account;
+                //
+                for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
+                    if ( nfts.result.account_nfts[i].Flags == 0 ) {
+                        // 노드값
+                        if ( xrpl.convertHexToString(nfts.result.account_nfts[i].URI) === uri ) return true;
+                    }
+                }
+                //
+                return false;
+            }
+                        
+            async function exist(isParent, nfts) {
+                for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
+                    if ( nfts.result.account_nfts[i].Flags == 0 ) {
+                        // 노드값
+                        var uri = xrpl.convertHexToString(nfts.result.account_nfts[i].URI);
+                        var idx = uri.indexOf(isParent ? "PARENT:" : "CHILD:");
+                        //
+                        if ( idx < 0 ) return undefined;
+                        //
+                        idx = uri.indexOf(':');
+                        //
+                        return uri.substring(idx+1);
+                    }
+                }
+                //
+                return undefined;
+            }
+            
+            async function register(client, secret, isParent, account) {
+                const wallet = xrpl.Wallet.fromSeed(secret);
+                //
+                var nfts = await client.request({
+                    method: "account_nfts",
+                    account: wallet.classicAddress,
+                    });
+
+                if ( isParent ) { // 부모 노드 존재 여부 확인
+                    if ( acc = await exist(true, nfts) ) {                        
+                        if ( acc === account ) return 0;
+                        //
+                        return 10001; // 이미 부모 노드가 등록 되었을 경우
+                    }
+                    // 
+                    if ( await exist(false, nfts) ) {
+                        return 10002; // 자식 노드를 부모 노드로 등록할 수 없습니다.
+                    }
+                } else if ( acc = await exist(false, nfts) ) {
+                    if ( acc === account ) {
+                        return 10003; // 이미 등록된 자식 노드입니다
+                    }
+                }
+                //
+                var uri = (isParent ? "PARENT:" : "CHILD:") + account;
+                //
+                const transactionBlob = {
+                    TransactionType: "NFTokenMint",
+                    Account: wallet.classicAddress,
+                    URI: xrpl.convertStringToHex(uri),
+                    Flags: 0,
+                    TokenTaxon: 0, //Required, but if you have no use for it, set to zero.
+                };
+                // Submit signed blob --------------------------------------------------------
+                const tx = await client.submitAndWait(transactionBlob, { wallet });
+                //
+                nfts = await client.request({
+                    method: "account_nfts",
+                    account: wallet.classicAddress,
+                    });
+
+                var isOK = await existNode(nfts, account, isParent);
+                //
+                console.log("isOK = " + isOK);
+                //
+                return isOK ? 0 : (isParent ? 10004 : 10005); 
+                // 10004 : 부모 노드 생성 실패
+                // 10005 : 자식 노드 생성 실패                
+            }
+
+            async function regWallet() {
+                const client = new xrpl.Client("wss://xls20-sandbox.rippletest.net:51233");
+                await client.connect();
+                //
+                console.log("Connected to Sandbox");
+                //
+                var msg = "";
+                var err = 0;
+                //
+                err = await register(client, chdSecret.value, true, parWallet.value);
+                //
+                if ( err == 0 ) {
+                    err = await register(client, parSecret.value, false, chdWallet.value);
+                }
+                //
+                await client.disconnect();
+                //
+                console.log("Disconnected to Sandbox");
+                // 
+                msg = await resMsg(err > 0 ? err : 1);
+                // 1 : 지갑 연결 성공
+                alert(msg);                 
+            }
+
+            async function nextWallet(client, nfts) {
+                for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
+                    if ( nfts.result.account_nfts[i].Flags === 0 ) {
+                        var uri = xrpl.convertHexToString(nfts.result.account_nfts[i].URI);
+                        var idx = uri.indexOf("PARENT:"); if ( idx < 0 ) continue;
+                        var acc = uri.substring(idx+7);
+                        //
+                        nfts = await client.request({
+                            method: "account_nfts",
+                            account: acc,
+                            });
+                        //
+                        return nfts;
+                    }
+                }
+                //
+                return undefined;
+            }
+
+            async function checkLevel(acount) {
+                const client = new xrpl.Client("wss://xls20-sandbox.rippletest.net:51233");
+                await client.connect();
+                //
+                var nfts = await client.request({
+                    method: "account_nfts",
+                    account: acount,
+                    });
+                //
+                var isChild  = false;
+                var level = 1;
+                //                
+                for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
+                    if ( nfts.result.account_nfts[i].Flags == 0 ) {
+                        // 노드값
+                        var uri;
+                        //
+                        uri = await xrpl.convertHexToString(nfts.result.account_nfts[i].URI);
+                        //
+                        if ( uri.indexOf("PARENT:") >= 0 ) {                            
+                            var idx = uri.indexOf(":");
+                            var acc = uri.substring(idx+1);
+                            //
+                            level++;
+                            //
+                            nfts = await client.request({
+                                method: "account_nfts",
+                                account: acc,
+                                });
+                            //
+                            while ( nfts.result.account_nfts.length > 0 ) {
+                                nfts = await nextWallet(client, nfts); if ( !nfts ) break;
+                                level++;
+                            }
+                            //
+                            await client.disconnect();
+                            //
+                            return level;
+                        }
+                        else if ( uri.indexOf("CHILD:") >= 0 ) isChild  = true;
+                    }
+                }
+                //
+                await client.disconnect();
+                //
+                return isChild ? 1 : 0;
+            }
+
+            async function login() {
+                const client = new xrpl.Client("wss://xls20-sandbox.rippletest.net:51233");
+                await client.connect();
+                //
+                var nfts = await client.request({
+                    method: "account_nfts",
+                    account: userWallet.value,
+                    });
+                //
+                await client.disconnect();
+                //
+                var level = 0;
+                //                
+                for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
+                    level = await checkLevel(nfts.result.account_nfts[i].Issuer); if ( level > 0 ) break;
+                }
+                //
+                if ( level > 0 ) {
+                    alert("Level-" + level);
+                }
+                else {
+                    alert("Not a member!!!");
+                }
+            }
+        </script>
+        <memta charset="UTF-8">
+        <title>지갑-연결</title>
+        <link rel="stylesheet" href="css/sytle.css"/ type="text/css">
+    </head>
+    <body>
+        <form method="post" action="/process/lsview">
+            <div className ="parent">
+                <text className ="label" >부모주소</text>
+                <input type="text" id="parWallet" size="40" placeholder="wallet"/>
+                <input type="text" id="parSecret" size="30" placeholder="secret"/>
+            </div>
+            <div className ="child">
+                <text className ="label" >자식주소</text>
+                <input type="text" id="chdWallet" size="40" placeholder="wallet"/>
+                <input type="text" id="chdSecret" size="30" placeholder="secret"/>
+                <button type="button" onClick="regWallet()">연결</button>
+                <button type="submit">조회</button>
+            </div>
+        </form>
+        <br><br><br>
+        <div className ="child">
+            <text className ="label" >회원주소</text>
+            <input type="text" id="userWallet" size="40" placeholder="wallet"/>
+            <button type="button" onClick="login()">체크레벨</button>
+        </div>
+    </body>
+</html>
