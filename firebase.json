@@ -4,6 +4,7 @@
     "runtime": "nodejs14"
   },
   "hosting": {
+    "target": "nft-license-system",
     "rewrites": [ {
       "source": "**",
       "function": "licenseSystem"

@@ -1,283 +1,288 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>License</title>
-            <script src="https://unpkg.com/xrpl@2.1.0-beta.1"></script>
-            <script>
-                if (typeof module !== "undefined") var xrpl = require("xrpl");
+
+<head>
+    <meta charset="UTF-8">
+    <title>License</title>
+    <script src="https://unpkg.com/xrpl@2.1.0-beta.1"></script>
+    <script>
+        if (typeof module !== "undefined") var xrpl = require("xrpl");
+        //
+        async function mintNFT(i, acc) {
+            var secret = "";
+            var tokenUrl = "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf4dfuylqabf3oclgtqy55fbzdi";
+            var flags = 8;
+            //
+            switch (i) {
+                case 1: secret = secret1.value; break;
+                case 2: secret = secret2.value; break;
+                case 3: secret = secret3.value; break;
+                case 4: secret = secret4.value; break;
+                default: return false;
+            }
+            //
+            const wallet = xrpl.Wallet.fromSeed(secret);
+            const client = new xrpl.Client(
+                "wss://xls20-sandbox.rippletest.net:51233"
+            );
+            await client.connect();
+            console.log("Connected to Sandbox");
+            //
+            const transactionBlob = {
+                TransactionType: "NFTokenMint",
+                Account: wallet.classicAddress,
+                URI: xrpl.convertStringToHex(tokenUrl),
+                Flags: parseInt(flags),
+                TokenTaxon: 0, //Required, but if you have no use for it, set to zero.
+            };
+            // Submit signed blob --------------------------------------------------------
+            const tx = await client.submitAndWait(transactionBlob, { wallet });
+            //
+            const nfts = await client.request({
+                method: "account_nfts",
+                account: wallet.classicAddress,
+            });
+            //
+            console.log(nfts);
+            //                    
+            console.log("Transaction result:", tx.result.meta.TransactionResult);
+            console.log(
+                "Balance changes:",
+                JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
+            );
+            //
+            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
+                var value = nfts.result.account_nfts[nfts.result.account_nfts.length - 1].TokenID;
                 //
-                async function mintNFT(i, acc) { 
-                    var secret = "";
-                    var tokenUrl = "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf4dfuylqabf3oclgtqy55fbzdi";
-                    var flags    = 8;
-                    //
-                    switch ( i ) {
-                        case 1 : secret = secret1.value; break;
-                        case 2 : secret = secret2.value; break;
-                        case 3 : secret = secret3.value; break;
-                        case 4 : secret = secret4.value; break;
-                        default : return false;
-                    }
-                    //
-                    const wallet = xrpl.Wallet.fromSeed(secret);
-                    const client = new xrpl.Client(
-                        "wss://xls20-sandbox.rippletest.net:51233"
-                    );
-                    await client.connect();
-                    console.log("Connected to Sandbox");
-                    //
-                    const transactionBlob = {
-                        TransactionType: "NFTokenMint",
-                        Account: wallet.classicAddress,
-                        URI: xrpl.convertStringToHex(tokenUrl),
-                        Flags: parseInt(flags),
-                        TokenTaxon: 0, //Required, but if you have no use for it, set to zero.
-                    };
-                    // Submit signed blob --------------------------------------------------------
-                    const tx = await client.submitAndWait(transactionBlob, { wallet });
-                    //
-                    const nfts = await client.request({
-                        method: "account_nfts",
-                        account: wallet.classicAddress,
-                    });
-                    //
-                    console.log(nfts);  
-                    //                    
-                    console.log("Transaction result:", tx.result.meta.TransactionResult);
-                    console.log(
-                        "Balance changes:",
-                        JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
-                    );
-                    //
-                    if ( tx.result.meta.TransactionResult === 'tesSUCCESS' ) {
-                        var value = nfts.result.account_nfts[nfts.result.account_nfts.length-1].TokenID;
-                        //
-                        switch ( i ) {
-                        case 1 : tokenID1.value = value; break;
-                        case 2 : tokenID2.value = value; break;
-                        case 3 : tokenID3.value = value; break;
-                        case 4 : tokenID4.value = value; break;
-                        }                    
-                    }
-                    //
-                    client.disconnect();
-                    //
-                    alert(tx.result.meta.TransactionResult);
-                    //
-                    return true;
+                switch (i) {
+                    case 1: tokenID1.value = value; break;
+                    case 2: tokenID2.value = value; break;
+                    case 3: tokenID3.value = value; break;
+                    case 4: tokenID4.value = value; break;
                 }
-                
-                async function createSellOffer(i) { 
-                    var secret  = "";
-                    var tokenId = "";
-                    //
-                    switch ( i ) {
-                        case 1 : secret = secret1.value; tokenId = tokenID1.value; break;
-                        case 2 : secret = secret2.value; tokenId = tokenID2.value; break;
-                        case 3 : secret = secret3.value; tokenId = tokenID3.value; break;
-                        case 4 : secret = secret4.value; tokenId = tokenID4.value; break;
-                        default : return false;
-                    }
-                    //
-                    if ( secret === "" || tokenId === "" ) {
-                        alert("Enter the (secret, tokenkID) value"); return false;
-                    }
-                    //
-                    const wallet = xrpl.Wallet.fromSeed(secret);
-                    const client = new xrpl.Client(
-                        "wss://xls20-sandbox.rippletest.net:51233"
-                    );
-                    //
-                    await client.connect();
-                    //
-                    console.log("Connected to Sandbox");
-                    // Prepare transaction -------------------------------------------------------
-                    const transactionBlob = {
-                        TransactionType: "NFTokenCreateOffer",
-                        Account: wallet.classicAddress,
-                        TokenID: tokenId,
-                        Amount : "10000000",
-                        Flags  : 1,
-                    };
+            }
+            //
+            client.disconnect();
+            //
+            alert(tx.result.meta.TransactionResult);
+            //
+            return true;
+        }
 
-                    // Submit signed blob --------------------------------------------------------
+        async function createSellOffer(i) {
+            var secret = "";
+            var tokenId = "";
+            //
+            switch (i) {
+                case 1: secret = secret1.value; tokenId = tokenID1.value; break;
+                case 2: secret = secret2.value; tokenId = tokenID2.value; break;
+                case 3: secret = secret3.value; tokenId = tokenID3.value; break;
+                case 4: secret = secret4.value; tokenId = tokenID4.value; break;
+                default: return false;
+            }
+            //
+            if (secret === "" || tokenId === "") {
+                alert("Enter the (secret, tokenkID) value"); return false;
+            }
+            //
+            const wallet = xrpl.Wallet.fromSeed(secret);
+            const client = new xrpl.Client(
+                "wss://xls20-sandbox.rippletest.net:51233"
+            );
+            //
+            await client.connect();
+            //
+            console.log("Connected to Sandbox");
+            // Prepare transaction -------------------------------------------------------
+            const transactionBlob = {
+                TransactionType: "NFTokenCreateOffer",
+                Account: wallet.classicAddress,
+                TokenID: tokenId,
+                Amount: "10000000",
+                Flags: 1,
+            };
 
-                    const tx = await client.submitAndWait(transactionBlob, { wallet });
-                    //
-                    console.log("***Sell Offers***");
-                    //
-                    let nftSellOffers;
-                    try {
-                        nftSellOffers = await client.request({
-                        method: "nft_sell_offers",
-                        tokenid: tokenId,
-                        });
-                    } catch (err) {
-                        console.log("No sell offers.");
-                    }
-                    //
-                    console.log(JSON.stringify(nftSellOffers, null, 2));
-                    // Check transaction results -------------------------------------------------
-                    console.log(
-                        "Transaction result:",
-                        JSON.stringify(tx.result.meta.TransactionResult, null, 2)
-                    );
-                    console.log(
-                        "Balance changes:",
-                        JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
-                    );
-                    client.disconnect();
-                    //
-                    return true;
+            // Submit signed blob --------------------------------------------------------
+
+            const tx = await client.submitAndWait(transactionBlob, { wallet });
+            //
+            console.log("***Sell Offers***");
+            //
+            let nftSellOffers;
+            try {
+                nftSellOffers = await client.request({
+                    method: "nft_sell_offers",
+                    tokenid: tokenId,
+                });
+            } catch (err) {
+                console.log("No sell offers.");
+            }
+            //
+            console.log(JSON.stringify(nftSellOffers, null, 2));
+            // Check transaction results -------------------------------------------------
+            console.log(
+                "Transaction result:",
+                JSON.stringify(tx.result.meta.TransactionResult, null, 2)
+            );
+            console.log(
+                "Balance changes:",
+                JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
+            );
+            client.disconnect();
+            //
+            return true;
+        }
+
+        async function acceptSellOffer(i) {
+            var secret = "";
+            var offerId = "";
+            //
+            switch (i) {
+                case 1: secret = buySecret1.value; offerId = offerID1.value; break;
+                case 2: secret = buySecret2.value; offerId = offerID2.value; break;
+                case 3: secret = buySecret3.value; offerId = offerID3.value; break;
+                case 4: secret = buySecret4.value; offerId = offerID4.value; break;
+                default: return false;
+            }
+            //
+            if (secret === "" || offerId === "") {
+                alert("Enter the (buySecret, Token Offer Index) value"); return false;
+            }
+            //
+            const wallet = xrpl.Wallet.fromSeed(secret);
+            const client = new xrpl.Client(
+                "wss://xls20-sandbox.rippletest.net:51233"
+            );
+            await client.connect();
+            console.log("Connected to Sandbox");
+
+            // Prepare transaction -------------------------------------------------------
+            const transactionBlob = {
+                TransactionType: "NFTokenAcceptOffer",
+                Account: wallet.classicAddress,
+                SellOffer: offerId,
+            };
+            // Submit signed blob --------------------------------------------------------
+            const tx = await client.submitAndWait(transactionBlob, { wallet });
+            const nfts = await client.request({
+                method: "account_nfts",
+                account: wallet.classicAddress,
+            });
+            //
+            console.log(JSON.stringify(nfts, null, 2));
+            //
+            // Check transaction results -------------------------------------------------
+            console.log(
+                "Transaction result:",
+                JSON.stringify(tx.result.meta.TransactionResult, null, 2)
+            );
+            console.log(
+                "Balance changes:",
+                JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
+            );
+            //
+            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
+                var value = nfts.result.account_nfts[nfts.result.account_nfts.length - 1].TokenID;
+                //
+                switch (i) {
+                    case 1: buySecret1.value = tokenID1.value = offerID1.value = ""; break;
+                    case 2: buySecret2.value = tokenID2.value = offerID2.value = ""; break;
+                    case 3: buySecret3.value = tokenID3.value = offerID3.value = ""; break;
+                    case 4: buySecret4.value = tokenID4.value = offerID4.value = ""; break;
                 }
+            }
+            //
+            client.disconnect();
+            //
+            alert(tx.result.meta.TransactionResult);
+            //
+            return true;
+        }
 
-                async function acceptSellOffer(i) {
-                    var secret  = "";
-                    var offerId = "";
-                    //
-                    switch ( i ) {
-                        case 1 : secret = buySecret1.value; offerId = offerID1.value; break;
-                        case 2 : secret = buySecret2.value; offerId = offerID2.value; break;
-                        case 3 : secret = buySecret3.value; offerId = offerID3.value; break;
-                        case 4 : secret = buySecret4.value; offerId = offerID4.value; break;
-                        default : return false;
-                    }
-                    //
-                    if ( secret === "" || offerId === "" ) {
-                        alert("Enter the (buySecret, Token Offer Index) value"); return false;
-                    }
-                    //
-                    const wallet = xrpl.Wallet.fromSeed(secret);
-                    const client = new xrpl.Client(
-                    "wss://xls20-sandbox.rippletest.net:51233"
-                    );
-                    await client.connect();
-                    console.log("Connected to Sandbox");
+        async function getOffers(i) {
+            var secret = "";
+            var tokenId = "";
+            //
+            switch (i) {
+                case 1: secret = secret1.value; tokenId = tokenID1.value; break;
+                case 2: secret = secret2.value; tokenId = tokenID2.value; break;
+                case 3: secret = secret3.value; tokenId = tokenID3.value; break;
+                case 4: secret = secret4.value; tokenId = tokenID4.value; break;
+                default: return false;
+            }
+            //
+            if (secret === "" || tokenId === "") {
+                alert("Enter the (secret, tokenkID) value"); return false;
+            }
+            //
+            const wallet = xrpl.Wallet.fromSeed(secret);
 
-                    // Prepare transaction -------------------------------------------------------
-                    const transactionBlob = {
-                        TransactionType: "NFTokenAcceptOffer",
-                        Account: wallet.classicAddress,
-                        SellOffer:offerId,
-                    };
-                    // Submit signed blob --------------------------------------------------------
-                    const tx = await client.submitAndWait(transactionBlob, { wallet });
-                    const nfts = await client.request({
-                    method: "account_nfts",
-                    account: wallet.classicAddress,
-                    });
-                    //
-                    console.log(JSON.stringify(nfts, null, 2));
-                    //
-                    // Check transaction results -------------------------------------------------
-                    console.log(
-                        "Transaction result:",
-                        JSON.stringify(tx.result.meta.TransactionResult, null, 2)
-                    );
-                    console.log(
-                        "Balance changes:",
-                        JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
-                    );
-                    //
-                    if ( tx.result.meta.TransactionResult === 'tesSUCCESS' ) {
-                        var value = nfts.result.account_nfts[nfts.result.account_nfts.length-1].TokenID;
-                        //
-                        switch ( i ) {
-                        case 1 : buySecret1.value = tokenID1.value = offerID1.value = ""; break;
-                        case 2 : buySecret2.value = tokenID2.value = offerID2.value = ""; break;
-                        case 3 : buySecret3.value = tokenID3.value = offerID3.value = ""; break;
-                        case 4 : buySecret4.value = tokenID4.value = offerID4.value = ""; break;
-                        }
-                    }
-                    //
-                    client.disconnect();
-                    //
-                    alert(tx.result.meta.TransactionResult);
-                    //
-                    return true;
+            const client = new xrpl.Client(
+                "wss://xls20-sandbox.rippletest.net:51233"
+            );
+            await client.connect();
+
+            const nfts = await client.request({
+                method: "account_nfts",
+                account: wallet.classicAddress,
+            });
+            //
+            console.log("Connected to Sandbox");
+            console.log(wallet);
+            console.log("***Sell Offers***");
+            let off;
+            var o;
+            //
+            try {
+                o = await client.request({
+                    method: "nft_sell_offers",
+                    tokenid: tokenId,
+                });
+                //
+                idx = o.result.offers[o.result.offers.length - 1].index;
+                //                        
+                switch (i) {
+                    case 1: offerID1.value = idx; break;
+                    case 2: offerID2.value = idx; break;
+                    case 3: offerID3.value = idx; break;
+                    case 4: offerID4.value = idx; break;
+                    default: return false;
                 }
+            } catch (err) {
+                console.log("No sell offers.");
+            }
+            //
+            client.disconnect();
+        }
+    </script>
+</head>
 
-                async function getOffers(i) {
-                    var secret  = "";
-                    var tokenId = "";
-                    //
-                    switch ( i ) {
-                        case 1 : secret = secret1.value; tokenId = tokenID1.value; break;
-                        case 2 : secret = secret2.value; tokenId = tokenID2.value; break;
-                        case 3 : secret = secret3.value; tokenId = tokenID3.value; break;
-                        case 4 : secret = secret4.value; tokenId = tokenID4.value; break;
-                        default : return false;
-                    }
-                    //
-                    if ( secret === "" || tokenId === "" ) {
-                        alert("Enter the (secret, tokenkID) value"); return false;
-                    }
-                    //
-                    const wallet = xrpl.Wallet.fromSeed(secret);
-
-                    const client = new xrpl.Client(
-                    "wss://xls20-sandbox.rippletest.net:51233"
-                    );
-                    await client.connect();
-
-                    const nfts = await client.request({
-                        method: "account_nfts",
-                        account: wallet.classicAddress,
-                    });
-                    //
-                    console.log("Connected to Sandbox");
-                    console.log(wallet);
-                    console.log("***Sell Offers***");
-                    let off;
-                    var o;
-                    //
-                    try {
-                        o = await client.request({
-                            method: "nft_sell_offers",
-                            tokenid: tokenId,
-                        });
-                        //
-                        idx = o.result.offers[o.result.offers.length-1].index;
-                        //                        
-                        switch ( i ) {
-                            case 1 : offerID1.value = idx; break;
-                            case 2 : offerID2.value = idx; break;
-                            case 3 : offerID3.value = idx; break;
-                            case 4 : offerID4.value = idx; break;
-                            default : return false;
-                        }
-                    } catch (err) {
-                        console.log("No sell offers.");
-                    }
-                    //
-                    client.disconnect();
-                }
-            </script>
-    </head>
-    <body>
-        <h1>License System</h1>
-        <% for(var i = 0; i < data.length ; i++){ %>
-            <div className ="child">
-                <h3>
-                    <text>Level-<%=i+1 %> :</text>
-                    <text><%=data[i] %></text>
-                </h3>
-                <input type="text" id="secret<%=i+1%>" size="70" placeholder="secret"/>
-                <button type="button" onClick="mintNFT(<%=i+1%>,'<%=data[i]%>')">mint-NFT</button>
-                <br>                
-                <input type="text" id="tokenID<%=i+1%>" size="70" placeholder="Token ID"/>
-                <button type="button" onClick="createSellOffer(<%=i+1%>)">Sell-NFT</button>
-                <br>                
-                <input type="text" id="offerID<%=i+1%>" size="70" placeholder="Token Offer Index"/>
-                <button type="button" onClick="getOffers(<%=i+1%>)">GetOffers</button>
-                <input type="text" id="buySecret<%=i+1%>" size="70" placeholder="Buyer's wallet secret"/>
-                <button type="button" onClick="acceptSellOffer(<%=i+1%>)">Buy-NFT</button>
-            </div>
-            <br><br>
-        <% } %>
-        <div> 
-            <a href="/">Back</a>
+<body>
+    <h1>License System</h1>
+    <% for(var i=0; i < data.length ; i++){ %>
+        <div className="child">
+            <h3>
+                <text>Level-<%=i+1 %> :</text>
+                <text>
+                    <%=data[i] %>
+                </text>
+            </h3>
+            <input type="text" id="secret<%=i+1%>" size="70" placeholder="secret" />
+            <button type="button" onClick="mintNFT(<%=i+1%>,'<%=data[i]%>')">mint-NFT</button>
+            <br>
+            <input type="text" id="tokenID<%=i+1%>" size="70" placeholder="Token ID" />
+            <button type="button" onClick="createSellOffer(<%=i+1%>)">Sell-NFT</button>
+            <br>
+            <input type="text" id="offerID<%=i+1%>" size="70" placeholder="Token Offer Index" />
+            <button type="button" onClick="getOffers(<%=i+1%>)">GetOffers</button>
+            <input type="text" id="buySecret<%=i+1%>" size="70" placeholder="Buyer's wallet secret" />
+            <button type="button" onClick="acceptSellOffer(<%=i+1%>)">Buy-NFT</button>
         </div>
-    </body>
+        <br><br>
+        <% } %>
+            <div>
+                <a href="/licenseSystem">Back</a>
+            </div>
+</body>
+
 </html>

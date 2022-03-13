@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "hac-xrpl"
+  },
+  "targets": {
+    "hac-xrpl": {
+      "hosting": {
+        "nft-license-system": [
+          "nft-license-system"
+        ]
+      }
+    }
   }
 }
