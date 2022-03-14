@@ -236,7 +236,7 @@
             //
             var level = 0;
             //                
-            for (var i = 0; i < nfts.result.account_nfts.length; i++) {
+            for (var i = nfts.result.account_nfts.length - 1; i >= 0; i++) {
                 level = await checkLevel(nfts.result.account_nfts[i].Issuer); if (level > 0) break;
             }
             //
@@ -280,6 +280,8 @@
         <input type="text" id="userWallet" size="40" placeholder="Member wallet" />
         <button type="button" onClick="login()">check level</button>
     </div>
+    <br>
+    <A href="https://hac-xrpl.web.app/" target="_self">hac-xrpl.web.app >></A>
 </body>
 
 </html>
