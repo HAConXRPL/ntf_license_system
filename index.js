@@ -35,6 +35,8 @@ app.use(cors());
 //
 var router = express.Router();
 
+app.root_wallet = config.root_wallet;
+
 app.get("/licenseSystem", function (req, res) {
   var context = {
     root: app.root_wallet,
