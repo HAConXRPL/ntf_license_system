@@ -5,28 +5,21 @@
     <meta charset="UTF-8">
     <title>License</title>
     <script src="https://unpkg.com/xrpl@2.1.0-beta.1"></script>
+    <script src="./"></script>
     <script>
         if (typeof module !== "undefined") var xrpl = require("xrpl");
         //
-        async function mintNFT(i, acc) {
-            var secret = "";
+        async function mintNFT(cSecret, acc, cTokenId) {
+            var secret = cSecret.value;
             var tokenUrl = "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf4dfuylqabf3oclgtqy55fbzdi";
             var flags = 8;
-            //
-            switch (i) {
-                case 1: secret = secret1.value; break;
-                case 2: secret = secret2.value; break;
-                case 3: secret = secret3.value; break;
-                case 4: secret = secret4.value; break;
-                default: return false;
-            }
             //
             const wallet = xrpl.Wallet.fromSeed(secret);
             const client = new xrpl.Client(
                 "wss://xls20-sandbox.rippletest.net:51233"
             );
             await client.connect();
-            console.log("Connected to Sandbox");
+            console.log("Connected to Sandbox [mintNFT]");
             //
             const transactionBlob = {
                 TransactionType: "NFTokenMint",
@@ -51,35 +44,27 @@
                 JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
             );
             //
-            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
-                var value = nfts.result.account_nfts[nfts.result.account_nfts.length - 1].TokenID;
-                //
-                switch (i) {
-                    case 1: tokenID1.value = value; break;
-                    case 2: tokenID2.value = value; break;
-                    case 3: tokenID3.value = value; break;
-                    case 4: tokenID4.value = value; break;
-                }
-            }
-            //
             client.disconnect();
             //
-            alert(tx.result.meta.TransactionResult);
+            var msg = "";
+            //
+            msg += tx.result.meta.TransactionResult;
+            //
+            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
+                cTokenId.value = nfts.result.account_nfts[nfts.result.account_nfts.length - 1].TokenID;
+                //
+                msg += "\r\n\r\ntoken id = ";
+                msg += cTokenId.value;
+            }
+            //
+            alert(msg);
             //
             return true;
         }
 
-        async function createSellOffer(i) {
-            var secret = "";
-            var tokenId = "";
-            //
-            switch (i) {
-                case 1: secret = secret1.value; tokenId = tokenID1.value; break;
-                case 2: secret = secret2.value; tokenId = tokenID2.value; break;
-                case 3: secret = secret3.value; tokenId = tokenID3.value; break;
-                case 4: secret = secret4.value; tokenId = tokenID4.value; break;
-                default: return false;
-            }
+        async function createSellOffer(cSecret, cTokenId, cOfferID) {
+            var secret = cSecret.value;
+            var tokenId = cTokenId.value;
             //
             if (secret === "" || tokenId === "") {
                 alert("Enter the (secret, tokenkID) value"); return false;
@@ -92,7 +77,7 @@
             //
             await client.connect();
             //
-            console.log("Connected to Sandbox");
+            console.log("Connected to Sandbox [createSellOffer]");
             // Prepare transaction -------------------------------------------------------
             const transactionBlob = {
                 TransactionType: "NFTokenCreateOffer",
@@ -128,22 +113,28 @@
                 "Balance changes:",
                 JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
             );
+            //
             client.disconnect();
+            //
+            var msg = "";
+            //
+            msg += tx.result.meta.TransactionResult;
+            //
+            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
+                cOfferID.value = nftSellOffers.result.offers[nftSellOffers.result.offers.length - 1].index;
+                //
+                msg += "\r\n\r\nToken Offer Index = ";
+                msg += cOfferID.value;
+            }
+            //
+            alert(msg);
             //
             return true;
         }
 
-        async function acceptSellOffer(i) {
-            var secret = "";
-            var offerId = "";
-            //
-            switch (i) {
-                case 1: secret = buySecret1.value; offerId = offerID1.value; break;
-                case 2: secret = buySecret2.value; offerId = offerID2.value; break;
-                case 3: secret = buySecret3.value; offerId = offerID3.value; break;
-                case 4: secret = buySecret4.value; offerId = offerID4.value; break;
-                default: return false;
-            }
+        async function acceptSellOffer(cBuySecret, cTokenID, cOfferID) {
+            var secret = cBuySecret.value;
+            var offerId = cOfferID.value;
             //
             if (secret === "" || offerId === "") {
                 alert("Enter the (buySecret, Token Offer Index) value"); return false;
@@ -154,7 +145,7 @@
                 "wss://xls20-sandbox.rippletest.net:51233"
             );
             await client.connect();
-            console.log("Connected to Sandbox");
+            console.log("Connected to Sandbox [acceptSellOffer]");
 
             // Prepare transaction -------------------------------------------------------
             const transactionBlob = {
@@ -181,35 +172,26 @@
                 JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
             );
             //
-            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
-                var value = nfts.result.account_nfts[nfts.result.account_nfts.length - 1].TokenID;
-                //
-                switch (i) {
-                    case 1: buySecret1.value = tokenID1.value = offerID1.value = ""; break;
-                    case 2: buySecret2.value = tokenID2.value = offerID2.value = ""; break;
-                    case 3: buySecret3.value = tokenID3.value = offerID3.value = ""; break;
-                    case 4: buySecret4.value = tokenID4.value = offerID4.value = ""; break;
-                }
-            }
-            //
             client.disconnect();
             //
-            alert(tx.result.meta.TransactionResult);
+            var msg = "";
+            //
+            msg += tx.result.meta.TransactionResult;
+            //
+            if (tx.result.meta.TransactionResult === 'tesSUCCESS') {
+                cBuySecret.value = cOfferID.value = cTokenID.value = "";
+                //
+                msg += "\r\n\r\nsold to buyer (" + wallet.classicAddress + ")";
+            }
+            //
+            alert(msg);
             //
             return true;
         }
 
-        async function getOffers(i) {
-            var secret = "";
-            var tokenId = "";
-            //
-            switch (i) {
-                case 1: secret = secret1.value; tokenId = tokenID1.value; break;
-                case 2: secret = secret2.value; tokenId = tokenID2.value; break;
-                case 3: secret = secret3.value; tokenId = tokenID3.value; break;
-                case 4: secret = secret4.value; tokenId = tokenID4.value; break;
-                default: return false;
-            }
+        async function getOffers(cSecret, cTokenID, cOfferID) {
+            var secret = cSecret.value;
+            var tokenId = cTokenID.value;
             //
             if (secret === "" || tokenId === "") {
                 alert("Enter the (secret, tokenkID) value"); return false;
@@ -227,7 +209,7 @@
                 account: wallet.classicAddress,
             });
             //
-            console.log("Connected to Sandbox");
+            console.log("Connected to Sandbox [getOffers]");
             console.log(wallet);
             console.log("***Sell Offers***");
             let off;
@@ -239,16 +221,11 @@
                     tokenid: tokenId,
                 });
                 //
-                idx = o.result.offers[o.result.offers.length - 1].index;
-                //                        
-                switch (i) {
-                    case 1: offerID1.value = idx; break;
-                    case 2: offerID2.value = idx; break;
-                    case 3: offerID3.value = idx; break;
-                    case 4: offerID4.value = idx; break;
-                    default: return false;
-                }
+                cOfferID.value = o.result.offers[o.result.offers.length - 1].index;
+                //
             } catch (err) {
+                cOfferID.value = "";
+                //
                 console.log("No sell offers.");
             }
             //
@@ -267,16 +244,20 @@
                     <%=data[i] %>
                 </text>
             </h3>
-            <input type="text" id="secret<%=i+1%>" size="70" placeholder="secret" />
-            <button type="button" onClick="mintNFT(<%=i+1%>,'<%=data[i]%>')">mint-NFT</button>
+            <input type="text" id="secret<%=i+1%>" size="80" placeholder="secret" />
+            <button type="button" onClick="mintNFT(secret<%=i+1%>,'<%=data[i]%>', tokenID<%=i+1%>)">mint-NFT</button>
             <br>
-            <input type="text" id="tokenID<%=i+1%>" size="70" placeholder="Token ID" />
-            <button type="button" onClick="createSellOffer(<%=i+1%>)">Sell-NFT</button>
+            <input type="text" id="tokenID<%=i+1%>" size="80" placeholder="Token ID" />
+            <button type="button"
+                onClick="createSellOffer(secret<%=i+1%>, tokenID<%=i+1%>, offerID<%=i+1%>)">Sell-NFT</button>
             <br>
-            <input type="text" id="offerID<%=i+1%>" size="70" placeholder="Token Offer Index" />
-            <button type="button" onClick="getOffers(<%=i+1%>)">GetOffers</button>
-            <input type="text" id="buySecret<%=i+1%>" size="70" placeholder="Buyer's wallet secret" />
-            <button type="button" onClick="acceptSellOffer(<%=i+1%>)">Buy-NFT</button>
+            <input type="text" id="offerID<%=i+1%>" size="80" placeholder="Token Offer Index" />
+            <button type="button"
+                onClick="getOffers(secret<%=i+1%>, tokenID<%=i+1%>, offerID<%=i+1%>)">GetOffers</button>
+            <br>
+            <input type="text" id="buySecret<%=i+1%>" size="80" placeholder="Buyer's wallet secret" />
+            <button type="button"
+                onClick="acceptSellOffer(buySecret<%=i+1%>, tokenID<%=i+1%>, offerID<%=i+1%>)">Buy-NFT</button>
         </div>
         <br><br>
         <% } %>

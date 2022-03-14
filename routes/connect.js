@@ -4,12 +4,11 @@ const Sdk = new XummSdk(
   "e0394628-5fc2-4349-9de3-dc3d93e359fa",
   "4aeb7f57-a34b-4d69-b094-1c676a5ec4e5"
 );
-
-const ROOTWALLET = "r3GWPm7QkWFL8uAWQtLEMBgg76nf5wtxu9";
 //
 var xrpl = require("xrpl");
 const internal = require("stream");
 const { _private } = require("xrpl/dist/npm/Wallet/fundWallet");
+const { config } = require("firebase-functions/v1");
 var ipfs = "ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf4dfuylqabf3oclgtqy55fbzdi";
 var TokenID =
   "000800006A8A2613F2BF314E3EF874601857C86039FD92D716E5DA9C00000001";
@@ -63,8 +62,10 @@ async function lookup(rootAccount, arr) {
 var lsview = function (req, res, next) {
   var arr = [];
   //
+  req.app.root_wallet = req.body.rootWallet;
+  //
   const main = async () => {
-    await lookup(ROOTWALLET, arr);
+    await lookup(req.app.root_wallet, arr);
     //
     var context = {
       data: arr,
