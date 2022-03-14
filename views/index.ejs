@@ -8,16 +8,17 @@
         //
         async function resMsg(id) {
             //
-            switch (id) {
-                case 1: return "Wallet connection successful.";
-                case 10001: return "It is connected to another parent node.";
-                case 10002: return "Cannot register child node as parent node.";
-                case 10003: return "It is a child node that is already registered..";
-                case 10004: return "Failed to create parent node";
-                case 10005: return "Failed to create child node";
-                default: return "unknown error message"
-            }
-            //
+            switch ( id ) 
+                {
+                case     1 : return "Wallet connection successful.";
+                case 10001 : return "It is connected to another parent node.";
+                case 10002 : return "Cannot register child node as parent node.";
+                case 10003 : return "It is a child node that is already registered..";
+                case 10004 : return "Failed to create parent node";
+                case 10005 : return "Failed to create child node";
+                default    : return "unknown error message"
+                }
+                //
             return false;
         }
 
@@ -146,7 +147,7 @@
         }
 
         async function checkLevel(account) {
-            if (rootWallet.value === account) return 1;
+            if ( rootWallet.value === account ) return 1;
             //
             const client = new xrpl.Client("wss://xls20-sandbox.rippletest.net:51233");
             await client.connect();
@@ -178,12 +179,12 @@
                         //
                         var bVerify = await verifyWallet(account, nfts);
                         //
-                        if (bVerify) {
+                        if ( bVerify ) {                            
                             while (nfts.result.account_nfts.length > 0) {
                                 account = nfts.result.account;
-                                nfts = await parentWallet(client, nfts); if (!nfts) break;
+                                nfts    = await parentWallet(client, nfts); if (!nfts) break;
                                 // 부모 지갑 검색
-                                bVerify = await verifyWallet(account, nfts); if (!bVerify) break;
+                                bVerify = await verifyWallet(account, nfts); if ( !bVerify ) break;
                                 // 유효성 체크
                                 level++;
                             }
@@ -191,7 +192,7 @@
                         //
                         await client.disconnect();
                         //
-                        if (!bVerify) return -1;
+                        if ( !bVerify ) return -1;
                         //
                         return account === rootWallet.value ? level : 0;
                     }
@@ -202,11 +203,11 @@
             //
             return 0;
         }
-
+        
         async function verifyWallet(account, nfts) {
             var bVerify = false;
             //
-            for (var i = 0; i < nfts.result.account_nfts.length; i++) {
+            for ( var i = 0 ; i < nfts.result.account_nfts.length ; i++ ) {
                 // 유효성 체크 부모하고 연결된 노드인지 조회
                 if (nfts.result.account_nfts[i].Flags == 0) {
                     // 노드값
@@ -215,7 +216,7 @@
                     uri = await xrpl.convertHexToString(nfts.result.account_nfts[i].URI);
                     //
                     if (uri.indexOf("CHILD:") >= 0) {
-                        if (bVerify = account === uri.substring(6)) break;
+                        if ( bVerify = account === uri.substring(6) ) break;
                     }
                 }
             }
@@ -236,21 +237,21 @@
             //
             var level = 0;
             //                
-            for (var i = nfts.result.account_nfts.length - 1; i >= 0; i++) {
+            for (var i = nfts.result.account_nfts.length-1; i >=0 ; i++) {
                 level = await checkLevel(nfts.result.account_nfts[i].Issuer); if (level > 0) break;
             }
             //
             var msg;
             //
             if (level > 0) {
-                msg = "Your service level is " + level;
-            } else if (level == 0) {
+                msg = "Your service level is "  + level;
+            } else if ( level == 0 ){                
                 msg = "I am not a service user. Buy Licensed NFT.";
             } else {
                 msg = "You are logged in with an unverified account.";
             }
             //            
-            await alert(msg);
+            await alert(msg);            
         }
     </script>
     <memta charset="UTF-8">
@@ -261,7 +262,7 @@
 <body>
     <form method="post" action="/licenseSystem/process/lsview">
         <div className="root">
-            <input type="text" id="rootWallet" size="40" value=<%=root%> name="rootWallet" placeholder="root wallet" />
+            <input type="text" id="rootWallet" size="40" value = <%=root%> name="rootWallet" placeholder="root wallet" />
             <button type="submit">Lookup [root-wallet]</button>
         </div>
         <br><br>
@@ -281,7 +282,7 @@
         <button type="button" onClick="login()">check level</button>
     </div>
     <br>
-    <A href="https://hac-xrpl.web.app/" target="_self">hac-xrpl.web.app >></A>
+    <A href = "https://hac-xrpl.web.app/" target = "_self" >hac-xrpl.web.app >></A>
 </body>
 
 </html>
